@@ -2,26 +2,32 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>JSFuck ASCIIアート</title>
+  <title>JSFuck アスキーアートジェネレータ</title>
   <style>
-    body { font-family: monospace; white-space: pre; }
-    #output { font-size: 6px; }
+    body { font-family: monospace; }
+    #output { font-size: 6px; border: solid; display: inline-block; }
+    #outputContainer { text-align: center; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/jscrewit"></script>
 </head>
 <body>
-  <h1>JSFuck ASCIIアートジェネレータ</h1>
+  <h1>JSFuck アスキーアートジェネレータ</h1>
+  <a href="https://github.com/kalaxity/jsfuck-asciify">GitHub: kalaxity/jsfuck-asciify</a>
 
-  <p>画像をアップロード（2値化＋@変換）:</p>
+  <h2>1. 画像をアップロード</h2>
   <input type="file" id="fileInput" accept="image/*"><br><br>
 
-  <p>JSコードを入力:</p>
+  <h2>2. JavaScriptコードを入力</h2>
   <textarea id="jsInput" rows="5" cols="60">alert("hello")</textarea><br><br>
 
-  <button id="generateBtn">生成</button>
+  <h2>3. Let's 生成</h2>
+  <button id="generateBtn">AA生成!</button>
   <br><br>
+
   <canvas id="canvas" style="display:none;"></canvas>
-  <pre id="output"></pre>
+  <div id="outputContainer">
+    <pre id="output"></pre>
+  </div>
 
   <script>
     const fileInput = document.getElementById('fileInput');
@@ -31,13 +37,15 @@
     const output = document.getElementById('output');
     const generateBtn = document.getElementById('generateBtn');
 
+    const binalizationThreshold = 192;
+
     let imageElement = null;
     let asciiArt = '';
 
     function generateAsciiArtToFitLength(img, requiredLength) {
-      const maxWidth = 1000;
       const maxScale = 10;
-      let scale = 1.0; // requiredLength / (img.width * img.height);
+      let scale = Math.sqrt(requiredLength / (img.width * img.height));
+      scale = Math.floor(scale * 100) / 100;
       let width, height, ascii, count;
 
       do {
@@ -60,7 +68,7 @@
             const g = data[index + 1];
             const b = data[index + 2];
             const brightness = (r + g + b) / 3;
-            if (brightness < 128) {
+            if (brightness < binalizationThreshold) {
               ascii += '@';
               count++;
             } else {
@@ -93,7 +101,7 @@
 
       img.onload = () => {
         imageElement = img;
-        output.textContent = '画像が読み込まれました。JSコードを入力し、「生成」ボタンを押してください。';
+        output.textContent = '画像が読み込まれました。JavaScriptコードを入力し、「生成」ボタンを押してください。';
       };
 
       reader.readAsDataURL(file);
@@ -106,7 +114,7 @@
       }
       const userCode = jsInput.value.trim();
       if (!userCode) {
-        alert('JSコードを入力してください');
+        alert('JavaScriptコードを入力してください');
         return;
       }
 
@@ -136,7 +144,7 @@
 
         output.textContent = result;
       } catch (e) {
-        alert('JSコードの変換に失敗しました: ' + e.message);
+        alert('JavaScriptコードの変換に失敗しました: ' + e.message);
       }
     });
   </script>
