@@ -1,0 +1,13 @@
+body {
+  font-family: monospace;
+}
+
+#output {
+  font-size: 6px;
+  border: solid;
+  display: inline-block;
+}
+
+#outputContainer {
+  text-align: center;
+}
