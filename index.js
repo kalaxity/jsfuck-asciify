@@ -1,35 +1,35 @@
 'use strict';
 
+const binalizationThreshold = 192;
+
 const fileInput = document.getElementById('fileInput');
 const jsInput = document.getElementById('jsInput');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const output = document.getElementById('output');
 const generateBtn = document.getElementById('generateBtn');
-
-const binalizationThreshold = 192;
-
 let imageElement = null;
-let asciiArt = '';
 
 function generateAsciiArtToFitLength(img, requiredLength) {
   const maxScale = 10;
   let scale = Math.sqrt(requiredLength / (img.width * img.height));
   scale = Math.floor(scale * 100) / 100;
-  let width, height, ascii, count;
+  let ascii;
 
   do {
-    width = Math.floor(img.width * scale);
-    height = Math.floor(img.height * scale * 0.5);
+    const width = Math.floor(img.width * scale);
+    const height = Math.floor(img.height * scale * 0.5);
+
+    // 画像をwidth * heightにリサイズ
     canvas.width = width;
     canvas.height = height;
     ctx.drawImage(img, 0, 0, width, height);
-
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
 
+    // 画像をAAに変換
     ascii = '';
-    count = 0;
+    let count = 0;
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
@@ -48,6 +48,7 @@ function generateAsciiArtToFitLength(img, requiredLength) {
       ascii += '\n';
     }
 
+    // AAの文字数が規定に達したか確認
     if (count >= requiredLength) {
       console.log(`scale: ${scale}, required: ${requiredLength}, len: ${count}`);
       break;
@@ -56,6 +57,38 @@ function generateAsciiArtToFitLength(img, requiredLength) {
   } while (scale <= maxScale);
 
   return ascii;
+}
+
+function embedJSFuckInAsciiArt(asciiArt, jsfucked) {
+  // AAの文字数を数える
+  const atCount = (asciiArt.match(/@/g) || []).length;
+  if (atCount > jsfucked.length) {
+    const diff = atCount - jsfucked.length;
+    jsfucked += '//'.repeat(diff);
+  }
+
+  // JSFuckコードをASCIIアートに埋め込む
+  let jsfuckedAA = '';
+  let jsIndex = 0;
+  for (const ch of asciiArt) {
+    if (ch === '@' && jsIndex < jsfucked.length) {
+      jsfuckedAA += jsfucked[jsIndex++];
+    } else {
+      jsfuckedAA += ch;
+    }
+  }
+
+  // 実行可能なコードに修正（/が単独で出現しないようにする）
+  let lines = jsfuckedAA.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const pos = lines[i].indexOf('/');
+    if (pos === -1) continue;
+    if (lines[i][pos + 1] !== '/') {
+      lines[i] = lines[i].substring(0, pos) + '//' + lines[i].substring(pos + 2);
+    }
+  }
+  
+  return lines.join('\n');
 }
 
 fileInput.addEventListener('change', (e) => {
@@ -89,41 +122,16 @@ generateBtn.addEventListener('click', () => {
   }
 
   try {
-    let jsfucked = JScrewIt.encode(userCode, { features: "COMPACT" /*BROWSER*/ });
+    // 1. JSFuckコードを生成
+    const jsfucked = JScrewIt.encode(userCode, { features: "COMPACT" /*BROWSER*/ });
+
+    // 2. AAを作成
     const requiredLength = jsfucked.length;
-    asciiArt = generateAsciiArtToFitLength(imageElement, requiredLength);
+    const asciiArt = generateAsciiArtToFitLength(imageElement, requiredLength);
 
-    // @の数を数える
-    const atCount = (asciiArt.match(/@/g) || []).length;
-    if (atCount > jsfucked.length) {
-      const diff = atCount - jsfucked.length;
-      jsfucked += '//'.repeat(diff);
-    }
-
-    let result = '';
-    let jsIndex = 0;
-
-    for (let i = 0; i < asciiArt.length; i++) {
-      const ch = asciiArt[i];
-      if (ch === '@' && jsIndex < jsfucked.length) {
-        result += jsfucked[jsIndex++];
-      } else {
-        result += ch;
-      }
-    }
-
-    // 実行可能なコードに修正
-    let lines = result.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      let pos = lines[i].indexOf('/');
-      if (pos === -1) continue;
-      if (lines[i][pos + 1] !== '/') {
-        lines[i] = lines[i].substring(0, pos) + '//' + lines[i].substring(pos + 2);
-      }
-    }
-    result = lines.join('\n');
-
-    output.textContent = result;
+    // 3. JSFuckコードをAAに埋め込む
+    const jsfuckedAA = embedJSFuckInAsciiArt(asciiArt, jsfucked);
+    output.textContent = jsfuckedAA;
   } catch (e) {
     alert('JavaScriptコードの変換に失敗しました: ' + e.message);
   }
