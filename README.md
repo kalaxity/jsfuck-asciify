@@ -2,6 +2,8 @@
 
 *Make ascii art by JSFuck source code*
 
+JavaScriptとして実行可能なアスキーアート（AA）を作成します。
+
 Online demo: <https://kalaxity.github.io/jsfuck-asciify/>
 
 ## 概要

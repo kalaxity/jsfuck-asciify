@@ -154,6 +154,17 @@
           }
         }
 
+        // 実行可能なコードに修正
+        let lines = result.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          let pos = lines[i].indexOf('/');
+          if (pos === -1) continue;
+          if (lines[i][pos + 1] !== '/') {
+            lines[i] = lines[i].substring(0, pos) + '//' + lines[i].substring(pos + 2);
+          }
+        }
+        result = lines.join('\n');
+
         output.textContent = result;
       } catch (e) {
         alert('JavaScriptコードの変換に失敗しました: ' + e.message);
