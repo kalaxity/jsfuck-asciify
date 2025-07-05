@@ -17,4 +17,4 @@ Online demo: <https://kalaxity.github.io/jsfuck-asciify/>
 
 以下のライブラリを利用しています。
 
-- [JScrewIt](https://github.com/fasttime/JScrewIt): [ISC License](https://github.com/fasttime/JScrewIt/blob/main/license.txt)
+- [JScrewIt](https://github.com/fasttime/JScrewIt) : [ISC License](https://github.com/fasttime/JScrewIt/blob/main/license.txt)
