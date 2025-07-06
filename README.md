@@ -1,6 +1,6 @@
 # jsfuck-asciify
 
-*Make ascii art by JSFuck source code*
+*make executable ascii art using JSFuck*
 
 JavaScriptとして実行可能なアスキーアート（AA）を作成します。
 
