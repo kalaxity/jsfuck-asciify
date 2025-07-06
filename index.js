@@ -10,69 +10,83 @@ const output = document.getElementById('output');
 const generateBtn = document.getElementById('generateBtn');
 let imageElement = null;
 
-function generateAsciiArtToFitLength(img, requiredLength) {
-  const maxScale = 10;
-  let scale = Math.sqrt(requiredLength / (img.width * img.height));
-  scale = Math.floor(scale * 100) / 100;
-  let ascii;
+/**
+ * 画像からアスキーアートを生成する関数
+ * @param  {HTMLImageElement} img 画像  
+ * @param  {float} scale 画像の拡大率
+ * @return {string} 作成したアスキーアート
+ */
+const generateAsciiArt = (img, scale) => {
+  // 画像の縦横サイズを拡大
+  const width = Math.floor(img.width * scale);
+  const height = Math.floor(img.height * scale * 0.5);
 
-  do {
-    const width = Math.floor(img.width * scale);
-    const height = Math.floor(img.height * scale * 0.5);
+  // 画像を実際にリサイズ
+  canvas.width = width;
+  canvas.height = height;
+  ctx.drawImage(img, 0, 0, width, height);
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
 
-    // 画像をwidth * heightにリサイズ
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(img, 0, 0, width, height);
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data;
+  // 画像をAAに変換
+  let asciiArt = '';
 
-    // 画像をAAに変換
-    ascii = '';
-    let count = 0;
-
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4;
-        const r = data[index];
-        const g = data[index + 1];
-        const b = data[index + 2];
-        const brightness = (r + g + b) / 3;
-        if (brightness < binalizationThreshold) {
-          ascii += '@';
-          count++;
-        } else {
-          ascii += ' ';
-        }
-      }
-      ascii += '\n';
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const r = data[index];
+      const g = data[index + 1];
+      const b = data[index + 2];
+      const brightness = (r + g + b) / 3;
+      asciiArt += (brightness < binalizationThreshold) ? '@' : ' ';
     }
-
-    // AAの文字数が規定に達したか確認
-    if (count >= requiredLength) {
-      console.log(`scale: ${scale}, required: ${requiredLength}, len: ${count}`);
-      break;
-    }
-    scale += 0.01;
-  } while (scale <= maxScale);
-
-  return ascii;
-}
-
-function embedJSFuckInAsciiArt(asciiArt, jsfucked) {
-  // AAの文字数を数える
-  const atCount = (asciiArt.match(/@/g) || []).length;
-  if (atCount > jsfucked.length) {
-    const diff = atCount - jsfucked.length;
-    jsfucked += '//'.repeat(diff);
+    asciiArt += '\n';
   }
 
-  // JSFuckコードをASCIIアートに埋め込む
+  return asciiArt;
+}
+
+/**
+ * 最小文字数を満たすアスキーアートを生成する関数
+ * @param  {HTMLImageElement} img 画像 
+ * @param  {int} requiredLength 必要な最小文字数
+ * @return {string} 最小文字数を満たすアスキーアート 
+ */
+const generateAsciiArtToFitLength = (img, requiredLength) => {
+  const maxScale = 10; // TODO: 適切な最大スケールに調整
+  let scale = Math.sqrt(requiredLength / (img.width * img.height));
+  scale = Math.floor(scale * 100) / 100;
+
+  do {
+    // AAを生成
+    const asciiArt = generateAsciiArt(img, scale);
+
+    // AAの文字数が規定に達したか確認
+    const count = (asciiArt.match(/@/g) || []).length;
+    if (count >= requiredLength) {
+      console.log(`scale: ${scale}, required: ${requiredLength}, len: ${count}`);
+      return asciiArt;
+    }
+    scale += 0.01; // TODO: 適切なスケール幅に調整
+  } while (scale <= maxScale);
+
+  throw new Error(`JSFuckコードの長さ(${requiredLength})に合うAAを生成できませんでした。`);
+}
+
+/**
+ * JSFuckコードをアスキーアートに埋め込む関数
+ * @param  {string} asciiArt アスキーアート
+ * @param  {string} jsfucked JSFuckコード
+ * @return {string} 埋め込みが完了したアスキーアート
+ */
+const embedJSFuckInAsciiArt = (asciiArt, jsfucked) => {
+  // JSFuckコードをAAに埋め込む
   let jsfuckedAA = '';
   let jsIndex = 0;
   for (const ch of asciiArt) {
     if (ch === '@' && jsIndex < jsfucked.length) {
-      jsfuckedAA += jsfucked[jsIndex++];
+      jsfuckedAA += jsfucked[jsIndex];
+      jsIndex++;
     } else {
       jsfuckedAA += ch;
     }
@@ -82,8 +96,7 @@ function embedJSFuckInAsciiArt(asciiArt, jsfucked) {
   let lines = jsfuckedAA.split('\n');
   for (let i = 0; i < lines.length; i++) {
     const pos = lines[i].indexOf('/');
-    if (pos === -1) continue;
-    if (lines[i][pos + 1] !== '/') {
+    if (pos !== -1 && lines[i][pos + 1] !== '/') {
       lines[i] = lines[i].substring(0, pos) + '//' + lines[i].substring(pos + 2);
     }
   }
@@ -91,6 +104,9 @@ function embedJSFuckInAsciiArt(asciiArt, jsfucked) {
   return lines.join('\n');
 }
 
+/**
+ * 画像ファイルが選択されたときの処理
+ */
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -110,6 +126,9 @@ fileInput.addEventListener('change', (e) => {
   reader.readAsDataURL(file);
 });
 
+/**
+ * 「生成」ボタンがクリックされたときの処理
+ */
 generateBtn.addEventListener('click', () => {
   if (!imageElement) {
     alert('先に画像をアップロードしてください');
@@ -123,11 +142,18 @@ generateBtn.addEventListener('click', () => {
 
   try {
     // 1. JSFuckコードを生成
-    const jsfucked = JScrewIt.encode(userCode, { features: "COMPACT" /*BROWSER*/ });
+    let jsfucked = JScrewIt.encode(userCode, { features: "COMPACT" /*BROWSER*/ });
 
     // 2. AAを作成
     const requiredLength = jsfucked.length;
     const asciiArt = generateAsciiArtToFitLength(imageElement, requiredLength);
+
+    // AAの文字数をJSFuckコードと揃える
+    const atCount = (asciiArt.match(/@/g) || []).length;
+    if (atCount > jsfucked.length) {
+      const diff = atCount - jsfucked.length;
+      jsfucked += '//'.repeat(diff);
+    }
 
     // 3. JSFuckコードをAAに埋め込む
     const jsfuckedAA = embedJSFuckInAsciiArt(asciiArt, jsfucked);
