@@ -1,7 +1,12 @@
 'use strict';
 
-const binalizationThreshold = 192;
+// TODO: 定数を適切な値に調整
+const BINALIZATION_THRESHOLD = 192;
+const MAX_SCALE = 10; // AAの最大拡大率 
+const SCALE_STEP = 0.01; // AAの拡大率のステップ
 
+// DOM要素の取得 
+// TODO: コードの整理
 const fileInput = document.getElementById('fileInput');
 const jsInput = document.getElementById('jsInput');
 const canvas = document.getElementById('canvas');
@@ -30,7 +35,6 @@ const generateAsciiArt = (img, scale) => {
 
   // 画像をAAに変換
   let asciiArt = '';
-
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const index = (y * width + x) * 4;
@@ -38,7 +42,7 @@ const generateAsciiArt = (img, scale) => {
       const g = data[index + 1];
       const b = data[index + 2];
       const brightness = (r + g + b) / 3;
-      asciiArt += (brightness < binalizationThreshold) ? '@' : ' ';
+      asciiArt += (brightness < BINALIZATION_THRESHOLD) ? '@' : ' ';
     }
     asciiArt += '\n';
   }
@@ -53,9 +57,8 @@ const generateAsciiArt = (img, scale) => {
  * @return {string} 最小文字数を満たすアスキーアート 
  */
 const generateAsciiArtToFitLength = (img, requiredLength) => {
-  const maxScale = 10; // TODO: 適切な最大スケールに調整
   let scale = Math.sqrt(requiredLength / (img.width * img.height));
-  scale = Math.floor(scale * 100) / 100;
+  scale = Math.floor(scale * 100) / 100; // TODO: ここのマジックナンバーがMAX_SCALEに依存するようにコードを書き換える
 
   do {
     // AAを生成
@@ -67,8 +70,8 @@ const generateAsciiArtToFitLength = (img, requiredLength) => {
       console.log(`scale: ${scale}, required: ${requiredLength}, len: ${count}`);
       return asciiArt;
     }
-    scale += 0.01; // TODO: 適切なスケール幅に調整
-  } while (scale <= maxScale);
+    scale += SCALE_STEP;
+  } while (scale <= MAX_SCALE);
 
   throw new Error(`JSFuckコードの長さ(${requiredLength})に合うAAを生成できませんでした。`);
 }
