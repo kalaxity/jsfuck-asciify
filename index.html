@@ -18,11 +18,18 @@
   <h2>2. JavaScriptコードを入力</h2>
   <textarea id="jsInput" rows="5" cols="60">alert("hello")</textarea><br><br>
 
+  <label for="encodingSelect">変換方式を選択:</label>
+  <select id="encodingSelect">
+    <option value="jsfuck">JSFuck</option>
+    <option value="jsfuck01">JSFuck+0/1 (beta)</option>
+  </select>
+
   <h2>3. Let's 生成</h2>
   <button id="generateBtn">AA生成!</button>
   <br><br>
 
   <canvas id="canvas" style="display:none;"></canvas>
+  <div id="outputInfo"></div>
   <div id="outputContainer">
     <pre id="output"></pre>
   </div>

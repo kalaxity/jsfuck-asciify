@@ -9,9 +9,11 @@ const SCALE_STEP = 0.01; // AAの拡大率のステップ
 // TODO: コードの整理
 const fileInput = document.getElementById('fileInput');
 const jsInput = document.getElementById('jsInput');
+const encodingSelect = document.getElementById('encodingSelect');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const output = document.getElementById('output');
+const outputInfo = document.getElementById('outputInfo');
 const generateBtn = document.getElementById('generateBtn');
 let imageElement = null;
 
@@ -123,7 +125,7 @@ fileInput.addEventListener('change', (e) => {
 
   img.onload = () => {
     imageElement = img;
-    output.textContent = '画像が読み込まれました。JavaScriptコードを入力し、「生成」ボタンを押してください。';
+    outputInfo.textContent = '画像が読み込まれました。JavaScriptコードを入力し、「生成」ボタンを押してください。';
   };
 
   reader.readAsDataURL(file);
@@ -142,10 +144,14 @@ generateBtn.addEventListener('click', () => {
     alert('JavaScriptコードを入力してください');
     return;
   }
+  const encoding = encodingSelect.value;
 
   try {
     // 1. JSFuckコードを生成
     let jsfucked = JScrewIt.encode(userCode, { features: "COMPACT" /*BROWSER*/ });
+    if (encoding === "jsfuck01") {
+      jsfucked = jsfucked.replace(/\[\+\[\]\]/g, "[0]").replace(/\+!!\[\]/g, "+1");
+    }
 
     // 2. AAを作成
     const requiredLength = jsfucked.length;
@@ -161,6 +167,15 @@ generateBtn.addEventListener('click', () => {
     // 3. JSFuckコードをAAに埋め込む
     const jsfuckedAA = embedJSFuckInAsciiArt(asciiArt, jsfucked);
     output.textContent = jsfuckedAA;
+
+    // 4. AAの情報を表示
+    const width = jsfuckedAA.indexOf('\n') + 1; // 最初の行の長さ
+    const height = jsfuckedAA.split('\n').length - 1; // 行数
+    const charCount = jsfuckedAA.replace(/\s/g, '').length;
+    outputInfo.textContent = `【AA情報】
+        幅: ${width} 文字, 
+        高さ: ${height} 行, 
+        総文字数: ${charCount} 文字`;
   } catch (e) {
     alert('JavaScriptコードの変換に失敗しました: ' + e.message);
   }
